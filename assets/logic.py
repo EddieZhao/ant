@@ -178,29 +178,30 @@ class logic_balancer(object):
 
     @staticmethod
     def save(param):
-    
-        # 创建新User对象:
-        new_asset =Asset( sn=param['wxsn'], purchase_date= '0000-00-00', idc_id =param['idc_id'], is_virtual =1)
-        session.add(new_asset)
-        session.flush()
-        session.commit()
-        param['asset_id'] = new_asset.id
+        try:
+            # 创建新User对象:
+            new_asset =Asset( sn=param['wxsn'], purchase_date= '0000-00-00', idc_id =param['idc_id'], is_virtual =1)
+            session.add(new_asset)
+            session.flush()
+            session.commit()
+            param['asset_id'] = new_asset.id
 
 
-        new_ip =IP( outer_ip=param['outer_ip'],idc_id =param['idc_id'])
-        session.add(new_ip)
-        session.flush()
-        session.commit()
-        param['ip_id'] = new_ip.id
+            new_ip =IP( outer_ip=param['outer_ip'],idc_id =param['idc_id'],is_balancer = 1)
+            session.add(new_ip)
+            session.flush()
+            session.commit()
+            param['ip_id'] = new_ip.id
 
-        new_idc_op_ship =idc_op_ship( asset_id=param['asset_id'],cabinet_id= 0 , game_id=0 , cluster_id = 0, idc_id =param['idc_id'], ip_id = param['ip_id'])
-        session.add(new_idc_op_ship)
+            new_idc_op_ship =idc_op_ship( asset_id=param['asset_id'],cabinet_id= 0 , game_id=0 , cluster_id = 0, idc_id =param['idc_id'], ip_id = param['ip_id'])
+            session.add(new_idc_op_ship)
 
 
-        new_sys_op_ship=sys_op_ship( asset_id=param['asset_id'], game_id=0 , cluster_id = 0, services_id =0, ip_id = param['ip_id'])
-        session.add(new_sys_op_ship)
+            new_sys_op_ship=sys_op_ship( asset_id=param['asset_id'], game_id=0 , cluster_id = 0, services_id =0, ip_id = param['ip_id'])
+            session.add(new_sys_op_ship)
 
-        session.flush()
-        session.commit()
-
+            session.flush()
+            session.commit()
+        except:
+            session.rollback()
 

@@ -9,7 +9,7 @@ from assets.logic import logic_idc
 
 def run(yun_name):
     
-    
+
     strat = api(yun_name,'get_idcs')    
     data = strat.get_result()
     
@@ -33,8 +33,8 @@ def run(yun_name):
             yun1 = yun_manage()
             yun1.data =data
             yun1.save_hosts()
-       
-    exit()
+   
+
     for idc in logic_idc.get_idcs(yun_name):
         #print idc
         print idc.name,idc.prefix
@@ -54,7 +54,7 @@ def run(yun_name):
 if __name__ == '__main__':
     
 
-    yun_list = ['ucloud'] 
+    yun_list = ['qingcloud'] 
     for yun in yun_list:
          
         run(yun)

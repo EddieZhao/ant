@@ -149,6 +149,7 @@ class IP(BaseModel):
     idc_id = Column(Integer(), ForeignKey('idc.id'), nullable=False)
     inner_ip = Column(String(50))
     outer_ip = Column(String(50), unique=True)
+    is_balancer = Column(Integer(), nullable=False, default =0)
     is_delete = Column(Integer(), nullable=False, default =0)
 
 

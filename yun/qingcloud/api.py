@@ -56,7 +56,7 @@ class API(Thread):
         for info in hosts:
             param = {}
             
-            param['public_ip'] = info['eip']['eip_addr'].encode('utf8') if info.has_key('eip') else ''
+            param['outer_ip'] = info['eip']['eip_addr'].encode('utf8') if info.has_key('eip') else ''
             param['inner_ip'] = info['vxnets'][0]['private_ip'].encode('utf8')
             param['hostname'] = info['instance_name'].encode('utf8')
             
@@ -126,7 +126,7 @@ class API(Thread):
                 children.append(instance_info['resource_id'])
             
             param = {}
-            param['public_ip'] = info['eips'][0]['eip_addr'].encode('utf8') if info.has_key('eips') else ''
+            param['outer_ip'] = info['eips'][0]['eip_addr'].encode('utf8') if info.has_key('eips') else ''
             param['hostname'] = info['loadbalancer_name'].encode('utf8')
             param['wxsn'] = info['loadbalancer_id'].encode('utf8')
             param['idc_id'] = idc_dict['idc_id']

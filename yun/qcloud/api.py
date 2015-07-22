@@ -9,11 +9,11 @@ usege:
 
 """
 
-import json
+import json,socket
 from threading import  Thread
 
 
-from api_base import get_cvms
+from api_base import *
 
 
 
@@ -47,35 +47,93 @@ class API(Thread):
         获取主机内容 
         '''
         
-        
-       
-        result = get_cvms()
+        idc =  idc_dict['prefix']
+        del idc_dict['prefix']
 
-        if result!=[]:
+        action = 'DescribeInstances'
+        config = {
+            'Region': '%s' % idc,
+            'method': 'get'
+        }
+        params = {}
+        service = Cvm(config)
+        result =  service.call(action, params)      
+ 
+
+        if result['totalCount']>0:
 #             print result
-            for i in result:
-            
+            for i in result['instanceSet']:
+                
                 param={}
-                param['public_ip'] = i['instanceInfo']['wanIp']
-                param['hostname']  = str(i['instanceId'])
-                param['wxsn']      = str(i['instanceId'])
-                param['inner_ip']  = i['instanceInfo']['lanIp']
-                param['purchase_date'] = '0000-00-00 00:00:00'      
+                param['outer_ip'] = i['wanIpSet'][0]
+                param['hostname']  = i['instanceName']
+                param['wxsn']      = i['instanceId']
+                param['inner_ip']  = i['lanIp']
+                param['purchase_date'] = i['createTime']      
                 param['idc_id']    = idc_dict['idc_id']
                 self.result.append(param)
                 
-            return self.result
+        return self.result
         
     
     def get_idcs(self):
         '''
         获取idc信息
         '''
-        return []
-            
+
+
+        param ={}
+        param['name'] = '广州'       
+        param['prefix']= 'gz'         
+        param['network_type']= '双线'
+        self.result.append(param)
+
+        param ={}
+        param['name'] = '上海'           
+        param['prefix']= 'sh'   
+        param['network_type']= '双线'
+        self.result.append(param)
+
+        param ={}
+        param['name'] = '香港'           
+        param['prefix']= 'hk'  
+        param['network_type']= '国际线路'
+        self.result.append(param)
+           
+        return self.result
+  
     def get_balancers(self,**idc_dict):
 
-        return []
+        idc =  idc_dict['prefix']
+        del idc_dict['prefix']
+
+        action = 'DescribeLoadBalancersByInstances'
+        config = {
+            'Region': '%s'% idc,
+            'method': 'get'
+        }
+        params = {}
+        service = Lb(config)
+        result =  service.call(action, params)
+
+        if result['loadBalancerSet']>0:
+#             print result
+            for i in result['loadBalancerSet']:
+                
+                param={}
+                param['outer_ip'] =  i['backendLanIp'] if i['loadBalancerVips']==[] else  i['loadBalancerVips'][0]
+                param['hostname']  = i['loadBalancerName']
+                param['wxsn']      = i['instanceId']
+                param['inner_ip']  = i['backendLanIp']
+                param['purchase_date'] = i['createTime']      
+                param['idc_id']    = idc_dict['idc_id']
+                param['is_del']    = 0 if i['status']=='1' else 1
+                param['children']  = i['backendWanIpSet']
+                self.result.append(param)
+                
+        return self.result
+
+
                 
     def get_result(self):
         
