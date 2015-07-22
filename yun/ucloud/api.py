@@ -120,7 +120,6 @@ class API(Thread):
             param['inner_ip']   = inner_ip
             param['purchase_date'] = time.strftime('%Y-%m-%d %H:%M:%S',  time.localtime(host['CreateTime']))
             param['idc_id']    = idc_dict['idc_id']
-            #510代表机器正在运行中
             param['is_del']    = 0 if host['State']=='Running' else 1
             
             self.result.append(param)

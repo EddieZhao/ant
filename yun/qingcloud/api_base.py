@@ -6,7 +6,7 @@ import qingcloud.iaas
 from custom.config.ini import DictConfigParser
 import datetime
 
-ini_path = os.path.join(os.path.abspath('./config/'),'yun_config')
+ini_path = os.path.join(os.path.abspath('/etc/'),'yun_config')
 
 
 ini_section_key  ='qingcloud'

@@ -15,119 +15,138 @@ import time
 import uuid
 import json
 from urllib2 import  URLError
-ini_path = os.path.join(os.path.abspath('./config/'),'yun_config')
+
+import urllib
+import requests
+import binascii
+import hashlib
+import hmac
+
+import copy
+import time
+import random
+import sys
+import os
+
+ini_path = os.path.join(os.path.abspath('/etc/'),'yun_config')
 
 ini_section_key  ='qcloud'
 
-def get(url,**headers):
+
+
+class Sign:
+    def __init__(self, secretId, secretKey):
+        self.secretId = secretId
+        self.secretKey = secretKey
+
+    def make(self, requestHost, requestUri, params, method = 'GET'):
+        srcStr = method.upper() + requestHost + requestUri + '?' + "&".join(k.replace("_",".") + "=" + str(params[k]) for k in sorted(params.keys()))
+        hashed = hmac.new(self.secretKey, srcStr, hashlib.sha1)
+        return binascii.b2a_base64(hashed.digest())[:-1]
+
+
+
+
+
+class Request:
+    timeout = 10
+    version = 'SDK_PYTHON_1.1'
+    def __init__(self, secretId, secretKey):
+        self.secretId = secretId
+        self.secretKey = secretKey
+
+    def generateUrl(self, requestHost, requestUri, params, method = 'GET'):
+        params['RequestClient'] = Request.version
+        sign = Sign(self.secretId, self.secretKey)
+        params['Signature'] = sign.make(requestHost, requestUri, params, method)
+        params = urllib.urlencode(params)
+
+        url = 'https://%s%s' % (requestHost, requestUri)
+        if (method.upper() == 'GET'):
+            url += '?' + params
+
+        return url
+
+    def send(self, requestHost, requestUri, params, files = {}, method = 'GET', debug = 0):
+        params['RequestClient'] = Request.version
+        sign = Sign(self.secretId, self.secretKey)
+        params['Signature'] = sign.make(requestHost, requestUri, params, method)
+
+        url = 'https://%s%s' % (requestHost, requestUri)
+
+        if (method.upper() == 'GET'):
+            req = requests.get(url, params=params, timeout=Request.timeout)
+            if (debug):
+                print 'url:', req.url, '\n'
+        else:
+            req = requests.post(url, data=params, files=files, timeout=Request.timeout)
+            if (debug):
+                print 'url:', req.url, '\n'
+
+        if req.status_code != requests.codes.ok:
+            req.raise_for_status()
+
+        return req.text
+
     
-    httpHandler = urllib2.HTTPHandler(debuglevel=0)
-    httpsHandler = urllib2.HTTPSHandler(debuglevel=0)
-    opener = urllib2.build_opener(httpHandler, httpsHandler)
 
-    urllib2.install_opener(opener)
-    req = urllib2.Request(url)
 
-    if headers:
-        for k in headers.keys():
-            req.add_header(k,headers[k])
+class Base:
+    debug = 0
+    requestHost = ''
+    requestUri = '/v2/index.php'
+    _params = {}
 
-    try:
-        response = urllib2.urlopen(req)
-        data = response.read()
-        return json.loads("".join(data))
+    def __init__(self, config):
+
+        n = DictConfigParser(ini_path)
+        config['secretId'] = n[ini_section_key]['id'].encode('utf-8')
+        config['secretKey'] = n[ini_section_key]['key'].encode('utf-8')
         
-    except URLError, e:
-        print e.code
-        print e.read()
 
-def get_rand():
-    
-    seed ='123456789'  
-    r = []
-    for i in range(10):
-        r.append(random.choice(seed))
-    salt=''.join(r)
+        self.secretId = config['secretId']
+        self.secretKey = config['secretKey']
+        self.defaultRegion = config['Region']
+        self.method = config['method']
+
+    def _checkParams(self, action, params):
+        self._params = copy.deepcopy(params)
+        self._params['Action'] = action[0].upper() + action[1:]
+
+        if (self._params.has_key('Region') != True):
+            self._params['Region'] = self.defaultRegion
+
+        if (self._params.has_key('SecretId') != True):
+            self._params['SecretId'] = self.secretId
+
+        if (self._params.has_key('Nonce') != True):
+            self._params['Nonce'] = random.randint(1, sys.maxint)
+
+        if (self._params.has_key('Timestamp') != True):
+            self._params['Timestamp'] = int(time.time())
+
+        return self._params
+
+    def generateUrl(self, action, params):
+        self._checkParams(action, params)
+        request = Request(self.secretId, self.secretKey)
+        return request.generateUrl(self.requestHost, self.requestUri, self._params, self.method)
+
+    def call(self, action, params, files = {}):
+        self._checkParams(action, params)
+        request = Request(self.secretId, self.secretKey)
+        callback = request.send(self.requestHost, self.requestUri, self._params, files, self.method, self.debug)
+        return json.loads(callback)
+
+
+class Cvm(Base):
+    requestHost = 'cvm.api.qcloud.com'
  
-    return int(salt)
 
-def create_str2Sig(body,method,uri,secrectId,nonce,timestamp):
-    '''
-    生成参数串
-    '''
-    arr2Sig = [
-        "body="+body,
-        "method="+method,
-        "uri="+uri,
-        "x-txc-cloud-secretid="+str(secrectId),
-        "x-txc-cloud-nonce="+str(nonce),
-        "x-txc-cloud-timestamp="+str(timestamp),
-    ]
-   
+class Region(Base):
+    requestHost = 'trade.api.qcloud.com'
 
-    str2Sig = "&".join(arr2Sig)
-    return str2Sig
 
-def create_signature(secretKey, str2Sig):
-    '''
-    生成签名
-    '''
-    h = hmac.new(secretKey, str2Sig, sha1)
-    signature = base64.encodestring(h.digest()).strip()
-    return signature
+class Lb(Base):
+    requestHost = 'lb.api.qcloud.com'
 
-def create_header(secrectId,nonce,timestamp,signature):
-    '''
-    生成header
-    '''
-    return {
-        "Content-type": " application/json; charset=utf-8",
-        "x-txc-cloud-secretid":secrectId,
-        "x-txc-cloud-nonce":str(nonce),
-        "x-txc-cloud-timestamp":timestamp,
-        "x-txc-cloud-signature":signature
-    }
-    
-
-def get_cvms():
-
-    
-    
-    n = DictConfigParser(ini_path)
-    access_key_id = n[ini_section_key]['id'].encode('utf-8')
-    access_key_secret = n[ini_section_key]['key'].encode('utf-8')
-    api_url = n[ini_section_key]['url'].encode('utf-8')
-
-    
-    endpoint = api_url
-    uri="/v1/cvms"
-    method = "GET"
-    
-     
-   
-    secrectId = access_key_id
-    secretKey = access_key_secret
-     
-    timestamp =int(time.time())
-    #print timestamp
-    nonce = get_rand()
-    body = ''
-     
-   
-
-    str2Sig = create_str2Sig(body,method,uri,secrectId,nonce,timestamp)
-             
-
-    signature = create_signature(secretKey, str2Sig)
-
-   
-    header = create_header(secrectId,nonce,timestamp,signature)
-    
-    
-    
-    url="http://"+endpoint+uri
-
-    
-    return get(url,**header)['instances']
-
-    
