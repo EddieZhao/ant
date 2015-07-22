@@ -58,23 +58,25 @@ class yun_manage():
             return False
 
         for param in self.data:
-            param['hostname'] = 'gamename_group_type'
+            param['hostname'] = 'game _group_type'
             param['asset_id'] =  logic_asset.save(param)
             param['ip_id'] = logic_ip.save(param)
             logic_idc_op_ship.save(param)
             logic_sys_op_ship.save(param)
-
-'''                 
+                
     def save_balancers(self):
         
         if self.data == None:
             return False
                 
-        db = Custom_MySQL(using='center_app')
-        
         for param in self.data:
-#             print param
+#           print param
             #标为负载均衡大类
+            print param
+            param['asset_id'] =  logic_balancer.save(param)
+            param['ip_id'] = logic_ip.save(param)
+            
+            '''
             param['main_category_id'] = 25
             param['is_balancers'] = 1
             
@@ -100,7 +102,8 @@ class yun_manage():
                     db.update('assets','wxsn="%s"'%wxsn,**updata)
             except Exception as e:
                 print e
-'''
+            '''
+
                 
                     
                         

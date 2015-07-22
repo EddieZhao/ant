@@ -11,7 +11,7 @@ import time
 import uuid
 import json
 from custom.config.ini import DictConfigParser
-ini_path = os.path.join(os.path.abspath('./config/'),'yun_config')
+ini_path = os.path.join(os.path.abspath('/etc/'),'yun_config')
 
 ini_section_key  ='aliyun'
 

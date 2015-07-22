@@ -38,17 +38,47 @@ class API(Thread):
         '''
         ucloud没有提供此接口
         '''
-        
+
         param ={}
-        param['network_type']=u'双线'
-        param['name'] = u'ucloud-yun[北京BGP A]'
-        param['prefix']= '1001'
+        param['name'] = '北京BGP-A'
+        param['prefix']= 'cn-north-01'      
+        param['network_type']= '双线'
         self.result.append(param)
-        
+
         param ={}
-        param['network_type']=u'双线'
-        param['name'] = u'ucloud-yun[亚太]'
-        param['prefix']= '3001'
+        param['name'] = '北京BGP-B'
+        param['prefix']= 'cn-north-02'     
+        param['network_type']= '双线'
+        self.result.append(param)
+
+        param ={}
+        param['name'] = '北京BGP-C'     
+        param['prefix']= 'cn-north-03'      
+        param['network_type']= '双线'
+        self.result.append(param)
+
+        param ={}
+        param['name'] = '华东双线'       
+        param['prefix']= 'cn-east-01'          
+        param['network_type']= '双线'
+        self.result.append(param)
+
+        param ={}
+        param['name'] = '华南双线'       
+        param['prefix']= 'cn-south-01'         
+        param['network_type']= '双线'
+        self.result.append(param)
+
+        param ={}
+        param['name'] = '亚太'           
+        param['prefix']= 'hk-01'   
+        param['network_type']= '国际线路'
+        self.result.append(param)
+
+        param ={}
+        param['name'] = '北美'           
+        param['prefix']= 'us-west-01'  
+        param['network_type']= '国际线路'
         self.result.append(param)
            
         return self.result
@@ -61,31 +91,37 @@ class API(Thread):
         idc =  idc_dict['prefix']
         del idc_dict['prefix']
         
-        ApiClient = UcloudApiClient(region_id =idc)
-        result = ApiClient.get("/instances", offset=0, max_count=50)
-        pprint(result)
 
-        exit()
-        for host in result['data']:
-            print host['private_ip'][0]
-            public_ip = ''
+        ApiClient = UcloudApiClient()
+        Parameters={
+                "Action":"DescribeUHostInstance",
+                "Region":"%s"%idc,
+               }
+        result = ApiClient.get("/", Parameters);
+        #pprint(result)
+
+ 
+        for host in result['UHostSet']:
+           
+            outer_ip = ''
             inner_ip = ''
-            
-            if host.get('public_ip'):
-                public_ip = host['public_ip'][0]
-            if host.get('private_ip'):
-                
-                inner_ip = host['private_ip'][0]
+            print host['IPSet']
+            if host['IPSet'][0].get('Type') == u'Private':
+                inner_ip = host['IPSet'][0]['IP']
+
+            if host['IPSet'][1].get('Type')  == u'Bgp':
+                outer_ip = host['IPSet'][1]['IP']
+
 
             param={}
-            param['public_ip']  = public_ip
-            param['hostname']   = host['hostname']
-            param['wxsn']       = host['vmid']
+            param['outer_ip']  = outer_ip
+            param['hostname']   = host['Name']
+            param['wxsn']       = host['UHostId']
             param['inner_ip']   = inner_ip
-            param['purchase_date'] = time.strftime('%Y-%m-%d %H:%M:%S',  time.localtime(host['create_time']))
+            param['purchase_date'] = time.strftime('%Y-%m-%d %H:%M:%S',  time.localtime(host['CreateTime']))
             param['idc_id']    = idc_dict['idc_id']
             #510代表机器正在运行中
-            param['is_del']    = 0 if host['vm_state']==510  else 1
+            param['is_del']    = 0 if host['State']=='Running' else 1
             
             self.result.append(param)
             

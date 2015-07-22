@@ -94,7 +94,7 @@ class API(Thread):
         del idc_dict['prefix']
         
         result = DescribeLoadBalancers(idc)
-
+       
         if result!=[]:
     
             for i in result:
@@ -105,7 +105,7 @@ class API(Thread):
                     children.append(child['ServerId'])
                 
                 param={}
-                param['public_ip'] = i['Address']
+                param['outer_ip'] = i['Address']
                 param['hostname']  = i['LoadBalancerName']
                 param['wxsn']      = i['LoadBalancerId']
                 param['idc_id']    = idc_dict['idc_id']

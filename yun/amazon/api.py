@@ -58,7 +58,7 @@ class API(Thread):
         for i in hosts:
             
             param={}
-            param['public_ip'] = i.ip_address
+            param['outer_ip'] = i.ip_address
             param['hostname'] = i.tags['Name']
             param['wxsn'] =i.id
             param['inner_ip'] = i.private_ip_address
@@ -106,7 +106,7 @@ class API(Thread):
             public_ip = socket.gethostbyaddr(myaddr)[2][0]
   
             param={}
-            param['public_ip'] = public_ip
+            param['outer_ip'] = public_ip
             param['hostname'] = i.name
             param['wxsn'] = i.canonical_hosted_zone_name
             param['idc_id']    = idc_dict['idc_id']

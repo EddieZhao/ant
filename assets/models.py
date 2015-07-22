@@ -124,7 +124,10 @@ class Asset(BaseModel):
     资产表，sn资产唯一标识，可含有业务含义
     '''
     __tablename__ = 'asset'
-
+    __table_args__=(
+        UniqueConstraint('idc_id','sn',name='uniq_idc_sn'),
+        {'mysql_engine': 'InnoDB'}
+        )
 
     id = Column(Integer, primary_key=True)
     sn     = Column(String(50), nullable=False, unique=True)
@@ -145,7 +148,7 @@ class IP(BaseModel):
     id = Column(Integer, primary_key=True)
     idc_id = Column(Integer(), ForeignKey('idc.id'), nullable=False)
     inner_ip = Column(String(50))
-    outer_ip = Column(String(50), nullable=False, unique=True)
+    outer_ip = Column(String(50), unique=True)
     is_delete = Column(Integer(), nullable=False, default =0)
 
 
