@@ -3,30 +3,23 @@
 
 import sys,os
 import commands,subprocess
-from custom.config.ini import DictConfigParser
-import sys,os
+from ant.custom.config.ini import DictConfigParser
+
 import urllib, urllib2
 import random
 import base64
 import hmac
 import hashlib
 from hashlib import sha1
-import time
 import uuid
 import json
 from urllib2 import  URLError
 
-import urllib
 import requests
 import binascii
-import hashlib
-import hmac
-
 import copy
 import time
-import random
-import sys
-import os
+
 
 ini_path = os.path.join(os.path.abspath('/etc/'),'yun_config')
 
