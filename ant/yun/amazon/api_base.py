@@ -4,7 +4,7 @@
 import os
 import boto.ec2
 import boto.ec2.elb
-from custom.config.ini import DictConfigParser
+from ant.custom.config.ini import DictConfigParser
 
 
 ini_path = os.path.join(os.path.abspath('/etc/'),'yun_config')

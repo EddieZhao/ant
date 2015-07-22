@@ -3,9 +3,9 @@
 
 
 import os
-from  yun.api import api
-from  yun_manage import yun_manage 
-from assets.logic import logic_idc
+from  ant.yun.api import api
+from  ant.yun_manage import yun_manage 
+from ant.assets.logic import logic_idc
 
 def run(yun_name):
     

@@ -3,6 +3,7 @@
 
 import sys,os
 import urllib, urllib2
+import urllib3
 import base64
 import hmac
 import hashlib
@@ -10,7 +11,9 @@ from hashlib import sha1
 import time
 import uuid
 import json
-from custom.config.ini import DictConfigParser
+from ant.custom.config.ini import DictConfigParser
+
+
 ini_path = os.path.join(os.path.abspath('/etc/'),'yun_config')
 
 ini_section_key  ='aliyun'
@@ -45,15 +48,16 @@ def compute_signature(parameters, access_key_secret):
 
 def compose_url(user_params):
     timestamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-
+    
+    
     n = DictConfigParser(ini_path)
     access_key_id = n[ini_section_key]['id'].encode('utf-8')
     access_key_secret = n[ini_section_key]['key'].encode('utf-8')
-    ecs_server_address = n[ini_section_key]['slburl'].encode('utf-8')
+    ecs_server_address = n[ini_section_key]['url'].encode('utf-8')
     
     parameters = { \
             'Format'        : 'JSON', \
-            'Version'       : '2013-02-21', \
+            'Version'       : '2013-01-10', \
             'AccessKeyId'   : access_key_id, \
             'SignatureVersion'  : '1.0', \
             'SignatureMethod'   : 'HMAC-SHA1', \
@@ -71,24 +75,58 @@ def compose_url(user_params):
 
 def make_request(user_params, quiet=False):
     url = compose_url(user_params)
-    request = urllib2.Request(url)
+    import requests
+
+    r = requests.get(url) 
+    if r.status_code != 200:
+        
+        raise SystemExit(r.content)
+
 
     try:
-        conn = urllib2.urlopen(request)
-        response = conn.read()
-    except urllib2.HTTPError, e:
-        print(e.read().strip())
-        raise SystemExit(e)
-
-    #make json output pretty, this code is copied from json.tool
-    try:
-        obj = json.loads(response)
+        obj = json.loads(r.content)
         if quiet:
             return obj
     except ValueError, e:
         raise SystemExit(e)
     json.dump(obj, sys.stdout, sort_keys=True, indent=2)
     sys.stdout.write('\n')
+
+
+def describe_instances(regionid):
+
+    if isinstance(regionid,dict):
+        return make_request(regionid,quiet=True)
+        
+    
+    user_params = {}
+    user_params['Action'] = 'DescribeZones'
+    user_params['RegionId'] = regionid
+    obj = make_request(user_params, quiet=True)
+    
+    zones = []
+    #print('%21s %21s %10s %15s' % ('InstanceId', 'InstanceName', 'Status', 'InstanceType'))
+    for zone in obj['Zones']['Zone']:
+        user_params = {}
+        user_params['Action'] = 'DescribeInstanceStatus'
+        user_params['RegionId'] = regionid
+        user_params['ZoneId'] = zone['ZoneId']
+        user_params['PageSize'] = '50'
+        user_params['PageNumber']= '1'
+
+        instances = make_request(user_params, quiet=True)
+        if len(instances) > 0:
+            for i in instances['InstanceStatuses']['InstanceStatus']:
+                instanceid = i['InstanceId']
+                params = {}
+                params['Action'] = 'DescribeInstanceAttribute' 
+                params['InstanceId'] = instanceid
+                res = make_request(params, quiet=True)
+                res['ZoneId'] = zone['ZoneId']
+                zones.append(res)
+                #print('%21s %21s %10s %15s' % (res['InstanceId'], res['InstanceName'], res['Status'], res['InstanceType']))
+                
+    return zones
 
 def DescribeLoadBalancers(regionid):
     user_params = {}

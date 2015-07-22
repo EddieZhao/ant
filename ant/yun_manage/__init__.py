@@ -11,8 +11,8 @@ usege:
 
 import sys
 import json
-from assets.db_config import session
-from assets.logic import *
+from ant.assets.db_config import session
+from ant.assets.logic import *
 
 
 class Desc(object):

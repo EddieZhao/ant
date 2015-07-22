@@ -4,7 +4,7 @@
 import types
 import json
 
-from custom.auto_load import auto_load
+from ant.custom.auto_load import auto_load
 
 
 class api():
@@ -21,7 +21,7 @@ class api():
     def get_mod(self):
         
         #自动加载模块
-        auto = auto_load('yun.%s.api'%self.package_name)   
+        auto = auto_load('ant.yun.%s.api'%self.package_name)   
         self.mod = auto.get_mod() 
         
     def get_result(self): 

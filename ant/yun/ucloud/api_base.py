@@ -6,7 +6,7 @@ import urlparse
 import urllib
 import sys
 import os
-from custom.config.ini import DictConfigParser
+from ant.custom.config.ini import DictConfigParser
 
 
 ini_path = os.path.join(os.path.abspath('/etc/'),'yun_config')

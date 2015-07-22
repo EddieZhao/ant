@@ -3,7 +3,7 @@
 
 import os
 import qingcloud.iaas
-from custom.config.ini import DictConfigParser
+from ant.custom.config.ini import DictConfigParser
 import datetime
 
 ini_path = os.path.join(os.path.abspath('/etc/'),'yun_config')
