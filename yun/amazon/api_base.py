@@ -7,7 +7,7 @@ import boto.ec2.elb
 from custom.config.ini import DictConfigParser
 
 
-ini_path = os.path.join(os.path.abspath('./config/'),'yun_config')
+ini_path = os.path.join(os.path.abspath('/etc/'),'yun_config')
 
 
 ini_section_key  ='amazon'
@@ -25,7 +25,7 @@ def get_amazon_regions(region=None,type='ecs'):
             return  boto.ec2.regions(aws_access_key_id=access_key_id,aws_secret_access_key=access_key_secret)
 
         except  Exception as e:
-            print e
+            #print e
 
             return None
     else:
@@ -34,14 +34,14 @@ def get_amazon_regions(region=None,type='ecs'):
                 return boto.ec2.connect_to_region(region,aws_access_key_id=access_key_id,aws_secret_access_key=access_key_secret)
     
             except  Exception as e:
-                print e
+                #print e
                 return None
         if type == 'ebl':
             try:
                 return boto.ec2.elb.connect_to_region(region_name=region,aws_access_key_id=access_key_id,aws_secret_access_key=access_key_secret)
 
             except  Exception as e:
-                print e
+                #print e
                 return None
              
         
